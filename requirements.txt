@@ -1,0 +1,10 @@
+streamlit
+pandas
+numpy
+easyocr
+pillow
+rapidfuzz
+pytesseract
+matplotlib
+sqlite-utils
+
