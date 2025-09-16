@@ -289,7 +289,7 @@ with col_left:
         st.session_state["email"] = ""
         st.session_state["role"] = "user"
         st.success("Logged out successfully.")
-        st.experimental_rerun()
+        st.rerun()
 
     st.markdown('</div>', unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
@@ -419,7 +419,7 @@ with col_right:
                     st.success("✅ Profile saved successfully.")
                     # refresh local profile and UI
                     profile = get_profile(username)
-                    st.experimental_rerun()
+                    st.rerun()
                 except Exception as e:
                     st.error(f"❌ Could not save profile: {e}")
 
