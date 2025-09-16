@@ -10,40 +10,86 @@ DB_FILE = "users.db"
 PROFILE_PIC_DIR = Path("profile_pics")
 PROFILE_PIC_DIR.mkdir(exist_ok=True)
 
-# ---- CSS FIX ----
+# ---- CSS ----
 st.markdown("""
 <style>
+/* General container */
 .profile-container {
-    background-color: #111111;
-    padding: 20px;
+    background-color: #1f1f1f;
+    padding: 25px;
     border-radius: 15px;
-    margin-top: 20px; /* FIX: Prevents white strip overlap */
+    margin-top: 20px;
+    color: #fff;
+    max-width: 800px;
 }
+
+/* Profile card */
 .profile-card {
     display: flex;
     align-items: center;
-    gap: 20px;
+    gap: 25px;
+    margin-bottom: 20px;
+}
+.profile-pic-wrapper {
+    position: relative;
+    width: 150px;
+    height: 150px;
 }
 .profile-pic {
     border-radius: 50%;
-    border: 4px solid green;
+    border: 4px solid #4CAF50;
     width: 150px;
     height: 150px;
     object-fit: cover;
 }
+.profile-pic:hover {
+    opacity: 0.9;
+}
+.edit-icon {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    background-color: #4CAF50;
+    border-radius: 50%;
+    padding: 5px;
+    cursor: pointer;
+}
+
+/* Profile name */
 .profile-name {
-    font-size: 22px;
+    font-size: 26px;
     font-weight: bold;
 }
+
+/* Section titles */
 .section-title {
-    font-size: 20px;
-    margin-top: 25px;
+    font-size: 22px;
     font-weight: bold;
+    margin-top: 25px;
+    border-bottom: 1px solid #4CAF50;
+    padding-bottom: 5px;
+}
+
+/* Info rows */
+.info-row {
+    margin: 5px 0;
+    font-size: 18px;
+}
+.info-icon {
+    margin-right: 8px;
+    color: #4CAF50;
+}
+.warning {
+    background-color: #ffcccb;
+    color: #a00;
+    padding: 8px;
+    border-radius: 5px;
+    margin: 5px 0;
 }
 </style>
 """, unsafe_allow_html=True)
 
-# ---- INIT DB ----
+# ---- DB INIT ----
 def init_profile_db():
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
@@ -75,14 +121,30 @@ def save_profile(username, fullname, age, gender, blood_group, allergies, condit
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
     c.execute('''INSERT OR REPLACE INTO profiles
-                (username, fullname, age, gender, blood_group, allergies, conditions, medications, profile_pic)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+                 (username, fullname, age, gender, blood_group, allergies, conditions, medications, profile_pic)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)''',
               (username, fullname, age, gender, blood_group, allergies, conditions, medications, profile_pic))
     conn.commit()
     conn.close()
 
-# ---- UI START ----
-st.markdown("## Profile Details")  # heading clean, no overlap
+# ---- PERSONALIZED ALERTS ----
+def display_alerts(profile):
+    _, fullname, age, gender, blood_group, allergies, conditions, medications, _ = profile
+    alerts = []
+    if not fullname:
+        alerts.append("Full name is missing!")
+    if not blood_group:
+        alerts.append("Blood group not provided.")
+    if not age or age < 0:
+        alerts.append("Age seems invalid.")
+    if allergies:
+        alerts.append(f"⚠️ You have listed allergies: {allergies}")
+    if conditions:
+        alerts.append(f"⚠️ Medical conditions recorded: {conditions}")
+    return alerts
+
+# ---- UI ----
+st.markdown("## Your Medical Profile")
 
 if "logged_in" not in st.session_state or not st.session_state["logged_in"]:
     st.warning("⚠️ Please login to view your profile.")
@@ -99,28 +161,35 @@ else:
 
         # Profile Card
         st.markdown('<div class="profile-card">', unsafe_allow_html=True)
+        st.markdown('<div class="profile-pic-wrapper">', unsafe_allow_html=True)
         if profile_pic and Path(profile_pic).exists():
-            st.image(str(profile_pic), use_container_width=False, width=150)
+            st.image(str(profile_pic), use_column_width=False, width=150, caption=None)
         else:
-            st.warning("⚠️ No profile image available.")
+            st.image("https://via.placeholder.com/150", use_column_width=False, width=150, caption=None)
+        st.markdown('</div>', unsafe_allow_html=True)
 
         st.markdown(f"""
             <div>
                 <div class="profile-name">{fullname if fullname else username}</div>
-                <div>Personal medical profile</div>
+                <div>Personal Medical Profile</div>
             </div>
         """, unsafe_allow_html=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
+        # Alerts / Personalized Suggestions
+        alerts = display_alerts(profile)
+        for alert in alerts:
+            st.markdown(f'<div class="warning">{alert}</div>', unsafe_allow_html=True)
+
         # Profile Details
         st.markdown('<div class="section-title">Profile Information</div>', unsafe_allow_html=True)
-        st.write(f"👤 **Full Name:** {fullname if fullname else '-'}")
-        st.write(f"🎂 **Age:** {age if age else '-'}")
-        st.write(f"⚧ **Gender:** {gender if gender else '-'}")
-        st.write(f"🩸 **Blood Group:** {blood_group if blood_group else '-'}")
-        st.write(f"🌿 **Allergies:** {allergies if allergies else '-'}")
-        st.write(f"💊 **Conditions:** {conditions if conditions else '-'}")
-        st.write(f"⚕️ **Medications:** {medications if medications else '-'}")
+        st.markdown(f'<div class="info-row">👤 <b>Full Name:</b> {fullname if fullname else "-"}</div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="info-row">🎂 <b>Age:</b> {age if age else "-"}</div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="info-row">⚧ <b>Gender:</b> {gender if gender else "-"}</div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="info-row">🩸 <b>Blood Group:</b> {blood_group if blood_group else "-"}</div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="info-row">🌿 <b>Allergies:</b> {allergies if allergies else "-"}</div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="info-row">💊 <b>Medical Conditions:</b> {conditions if conditions else "-"}</div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="info-row">⚕️ <b>Medications:</b> {medications if medications else "-"}</div>', unsafe_allow_html=True)
 
         # Edit Form
         st.markdown('<div class="section-title">Edit Profile</div>', unsafe_allow_html=True)
@@ -143,7 +212,7 @@ else:
                     img.save(pic_path)
                 save_profile(username, fullname, age, gender, blood_group, allergies, conditions, medications, str(pic_path))
                 st.success("Profile updated successfully ✅")
-                st.rerun()
+                st.experimental_rerun()
 
         st.markdown('</div>', unsafe_allow_html=True)
 
@@ -167,4 +236,4 @@ else:
                     img.save(pic_path)
                 save_profile(username, fullname, age, gender, blood_group, allergies, conditions, medications, str(pic_path) if pic_path else None)
                 st.success("Profile created successfully ✅")
-                st.rerun()
+                st.experimental_rerun()
