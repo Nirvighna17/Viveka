@@ -12,10 +12,10 @@ DB_FILE = "users.db"
 PROFILE_PIC_DIR = Path("profile_pics")
 PROFILE_PIC_DIR.mkdir(exist_ok=True)
 
-# ---- CSS FOR HIGH-END UI ----
+# ---- CSS FOR PROFESSIONAL UI ----
 st.markdown("""
 <style>
-/* Container */
+/* Main Container */
 .profile-container {
     max-width: 900px;
     margin: 20px auto;
@@ -134,6 +134,14 @@ st.markdown("""
 .file-drop:hover {
     background-color: #333;
 }
+
+/* Responsive */
+@media screen and (max-width: 700px) {
+    .profile-card {
+        flex-direction: column;
+        align-items: center;
+    }
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -211,9 +219,9 @@ else:
         st.markdown('<div class="profile-card">', unsafe_allow_html=True)
         st.markdown('<div class="profile-pic-wrapper">', unsafe_allow_html=True)
         if profile_pic and Path(profile_pic).exists():
-            st.image(str(profile_pic), use_column_width=False, width=150)
+            st.image(str(profile_pic), use_container_width=False, width=None)
         else:
-            st.image("https://via.placeholder.com/150", use_column_width=False, width=150)
+            st.image("https://via.placeholder.com/150", use_container_width=False, width=None)
         st.markdown('</div>', unsafe_allow_html=True)
 
         # Name and subtitle
@@ -242,7 +250,7 @@ else:
         st.markdown(f'<div class="info-row">⚕️ <b>Medications:</b> {medications if medications else "-"}</div>', unsafe_allow_html=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
-        # EDIT FORM WITH DRAG & DROP IMAGE UPLOAD
+        # EDIT FORM
         st.markdown('<div class="section-title">Edit Profile</div>', unsafe_allow_html=True)
         with st.form("profile_form"):
             fullname = st.text_input("Full Name", value=fullname or "")
@@ -263,7 +271,7 @@ else:
                     pic_path = save_uploaded_image(pic_file, username)
                 save_profile(username, fullname, age, gender, blood_group, allergies, conditions, medications, pic_path)
                 st.success("Profile updated successfully ✅")
-                st.rerun()
+                st.rerun()  # standard rerun
 
         st.markdown('</div>', unsafe_allow_html=True)
 
@@ -287,4 +295,4 @@ else:
                     pic_path = save_uploaded_image(pic_file, username)
                 save_profile(username, fullname, age, gender, blood_group, allergies, conditions, medications, pic_path)
                 st.success("Profile created successfully ✅")
-                st.rerun()
+                st.rerun()  # standard rerun
