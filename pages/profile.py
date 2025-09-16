@@ -3,21 +3,19 @@ import streamlit as st
 import sqlite3
 from pathlib import Path
 from PIL import Image
-import io
-import base64
 import os
 
-# ---- DB CONFIG ----
+# -------- CONFIG ----------
 DB_FILE = "users.db"
 PROFILE_PIC_DIR = Path("profile_pics")
 PROFILE_PIC_DIR.mkdir(exist_ok=True)
 
-# ---- CSS FOR PROFESSIONAL UI ----
+# -------- CSS ----------
 st.markdown("""
 <style>
-/* Main Container */
+/* MAIN CONTAINER */
 .profile-container {
-    max-width: 900px;
+    max-width: 950px;
     margin: 20px auto;
     padding: 25px;
     border-radius: 15px;
@@ -27,7 +25,7 @@ st.markdown("""
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
-/* Profile Card */
+/* PROFILE CARD */
 .profile-card {
     display: flex;
     align-items: center;
@@ -48,9 +46,7 @@ st.markdown("""
     object-fit: cover;
     transition: transform 0.2s ease;
 }
-.profile-pic:hover {
-    transform: scale(1.05);
-}
+.profile-pic:hover { transform: scale(1.05); }
 .edit-overlay {
     position: absolute;
     bottom: 0;
@@ -62,90 +58,45 @@ st.markdown("""
     border: 2px solid #fff;
 }
 
-/* Name & Info */
-.profile-info {
-    flex: 1;
-}
-.profile-name {
-    font-size: 28px;
-    font-weight: bold;
-}
-.profile-subtitle {
-    font-size: 16px;
-    color: #bbb;
-    margin-top: 4px;
-}
+/* NAME & INFO */
+.profile-info { flex: 1; }
+.profile-name { font-size: 28px; font-weight: bold; }
+.profile-subtitle { font-size: 16px; color: #bbb; margin-top: 4px; }
 
-/* Section Titles */
-.section-title {
-    font-size: 22px;
-    font-weight: bold;
-    margin-top: 25px;
-    margin-bottom: 10px;
-    border-bottom: 2px solid #4CAF50;
-    padding-bottom: 5px;
-}
+/* SECTION TITLES */
+.section-title { font-size:22px; font-weight:bold; margin-top:25px; margin-bottom:10px;
+border-bottom:2px solid #4CAF50; padding-bottom:5px; }
 
-/* Info Rows */
-.info-row {
-    font-size: 18px;
-    margin: 6px 0;
-}
-.info-icon {
-    margin-right: 8px;
-    color: #4CAF50;
-}
+/* INFO ROWS */
+.info-row { font-size: 18px; margin:6px 0; }
+.info-icon { margin-right:8px; color:#4CAF50; }
 
-/* Personalized Alerts */
-.alert-box {
-    background-color: #ff4c4c33;
-    color: #ff3333;
-    padding: 8px;
-    border-radius: 6px;
-    margin: 5px 0;
-}
+/* ALERT BOX */
+.alert-box { background-color:#ff4c4c33; color:#ff3333; padding:8px; border-radius:6px; margin:5px 0; }
 
-/* Scrollable Details */
-.scrollable {
-    max-height: 220px;
-    overflow-y: auto;
-    padding-right: 5px;
-}
+/* SCROLLABLE */
+.scrollable { max-height:220px; overflow-y:auto; padding-right:5px; }
 
-/* Form Styling */
-.stTextInput>div>div>input, .stNumberInput>div>div>input, .stTextArea>div>div>textarea, .stSelectbox>div>div>div {
-    background-color: #2c2c2c;
-    color: #fff;
+/* FORM INPUTS */
+.stTextInput>div>div>input, .stNumberInput>div>div>input,
+.stTextArea>div>div>textarea, .stSelectbox>div>div>div {
+    background-color:#2c2c2c; color:#fff;
 }
-.stButton>button {
-    background-color: #4CAF50;
-    color: #fff;
-    font-weight: bold;
-}
-.file-drop {
-    border: 2px dashed #4CAF50;
-    border-radius: 10px;
-    padding: 20px;
-    text-align: center;
-    cursor: pointer;
-    color: #bbb;
-    margin-bottom: 10px;
-}
-.file-drop:hover {
-    background-color: #333;
-}
+.stButton>button { background-color:#4CAF50; color:#fff; font-weight:bold; }
 
-/* Responsive */
-@media screen and (max-width: 700px) {
-    .profile-card {
-        flex-direction: column;
-        align-items: center;
-    }
+/* FILE DROP */
+.file-drop { border:2px dashed #4CAF50; border-radius:10px; padding:20px; text-align:center;
+cursor:pointer; color:#bbb; margin-bottom:10px; }
+.file-drop:hover { background-color:#333; }
+
+/* RESPONSIVE */
+@media screen and (max-width:700px){
+    .profile-card { flex-direction:column; align-items:center; }
 }
 </style>
 """, unsafe_allow_html=True)
 
-# ---- DATABASE FUNCTIONS ----
+# -------- DATABASE FUNCTIONS ----------
 def init_profile_db():
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
@@ -181,7 +132,7 @@ def save_profile(username, fullname, age, gender, blood_group, allergies, condit
     conn.commit()
     conn.close()
 
-# ---- PERSONALIZED ALERTS ----
+# -------- PERSONALIZED ALERTS ----------
 def personalized_alerts(profile):
     _, fullname, age, gender, blood_group, allergies, conditions, medications, _ = profile
     alerts = []
@@ -192,14 +143,14 @@ def personalized_alerts(profile):
     if conditions: alerts.append(f"⚠️ Medical conditions recorded: {conditions}")
     return alerts
 
-# ---- IMAGE HANDLER ----
+# -------- IMAGE HANDLER ----------
 def save_uploaded_image(file, username):
     path = PROFILE_PIC_DIR / f"{username}.png"
     img = Image.open(file)
     img.save(path)
     return str(path)
 
-# ---- MAIN UI ----
+# -------- MAIN UI ----------
 st.markdown("## Your Medical Profile")
 
 if "logged_in" not in st.session_state or not st.session_state["logged_in"]:
@@ -209,13 +160,14 @@ else:
     init_profile_db()
     profile = get_profile(username)
 
+    # PROFILE EXISTS
     if profile:
         (u, fullname, age, gender, blood_group,
          allergies, conditions, medications, profile_pic) = profile
 
         st.markdown('<div class="profile-container">', unsafe_allow_html=True)
 
-        # PROFILE CARD
+        # ---- PROFILE CARD ----
         st.markdown('<div class="profile-card">', unsafe_allow_html=True)
         st.markdown('<div class="profile-pic-wrapper">', unsafe_allow_html=True)
         if profile_pic and Path(profile_pic).exists():
@@ -223,8 +175,6 @@ else:
         else:
             st.image("https://via.placeholder.com/150", use_container_width=False, width=None)
         st.markdown('</div>', unsafe_allow_html=True)
-
-        # Name and subtitle
         st.markdown(f'''
             <div class="profile-info">
                 <div class="profile-name">{fullname if fullname else username}</div>
@@ -233,24 +183,36 @@ else:
         ''', unsafe_allow_html=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
-        # PERSONALIZED ALERTS
+        # ---- PERSONALIZED ALERTS ----
         alerts = personalized_alerts(profile)
         for alert in alerts:
             st.markdown(f'<div class="alert-box">{alert}</div>', unsafe_allow_html=True)
 
-        # PROFILE DETAILS
-        st.markdown('<div class="section-title">Profile Information</div>', unsafe_allow_html=True)
-        st.markdown('<div class="scrollable">', unsafe_allow_html=True)
-        st.markdown(f'<div class="info-row">👤 <b>Full Name:</b> {fullname if fullname else "-"}</div>', unsafe_allow_html=True)
-        st.markdown(f'<div class="info-row">🎂 <b>Age:</b> {age if age else "-"}</div>', unsafe_allow_html=True)
-        st.markdown(f'<div class="info-row">⚧ <b>Gender:</b> {gender if gender else "-"}</div>', unsafe_allow_html=True)
-        st.markdown(f'<div class="info-row">🩸 <b>Blood Group:</b> {blood_group if blood_group else "-"}</div>', unsafe_allow_html=True)
-        st.markdown(f'<div class="info-row">🌿 <b>Allergies:</b> {allergies if allergies else "-"}</div>', unsafe_allow_html=True)
-        st.markdown(f'<div class="info-row">💊 <b>Medical Conditions:</b> {conditions if conditions else "-"}</div>', unsafe_allow_html=True)
-        st.markdown(f'<div class="info-row">⚕️ <b>Medications:</b> {medications if medications else "-"}</div>', unsafe_allow_html=True)
-        st.markdown('</div>', unsafe_allow_html=True)
+        # ---- TAB SECTIONS ----
+        tabs = st.tabs(["Personal Info","Medical History","Allergies & Conditions","Medications","Suggestions"])
+        with tabs[0]:
+            st.markdown('<div class="section-title">Personal Info</div>', unsafe_allow_html=True)
+            st.markdown('<div class="scrollable">', unsafe_allow_html=True)
+            st.markdown(f'<div class="info-row">👤 <b>Full Name:</b> {fullname if fullname else "-"}</div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="info-row">🎂 <b>Age:</b> {age if age else "-"}</div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="info-row">⚧ <b>Gender:</b> {gender if gender else "-"}</div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="info-row">🩸 <b>Blood Group:</b> {blood_group if blood_group else "-"}</div>', unsafe_allow_html=True)
+            st.markdown('</div>', unsafe_allow_html=True)
+        with tabs[1]:
+            st.markdown('<div class="section-title">Medical History</div>', unsafe_allow_html=True)
+            st.write(f"{conditions if conditions else 'No conditions recorded.'}")
+        with tabs[2]:
+            st.markdown('<div class="section-title">Allergies & Conditions</div>', unsafe_allow_html=True)
+            st.write(f"{allergies if allergies else 'No allergies recorded.'}")
+        with tabs[3]:
+            st.markdown('<div class="section-title">Medications</div>', unsafe_allow_html=True)
+            st.write(f"{medications if medications else 'No medications recorded.'}")
+        with tabs[4]:
+            st.markdown('<div class="section-title">Suggestions</div>', unsafe_allow_html=True)
+            for a in alerts:
+                st.write(f"• {a}")
 
-        # EDIT FORM
+        # ---- EDIT FORM ----
         st.markdown('<div class="section-title">Edit Profile</div>', unsafe_allow_html=True)
         with st.form("profile_form"):
             fullname = st.text_input("Full Name", value=fullname or "")
@@ -271,12 +233,12 @@ else:
                     pic_path = save_uploaded_image(pic_file, username)
                 save_profile(username, fullname, age, gender, blood_group, allergies, conditions, medications, pic_path)
                 st.success("Profile updated successfully ✅")
-                st.rerun()  # standard rerun
+                st.rerun()
 
         st.markdown('</div>', unsafe_allow_html=True)
 
+    # PROFILE DOES NOT EXIST
     else:
-        # NEW PROFILE
         st.info("ℹ️ No saved profile found — please complete your profile below.")
         with st.form("new_profile"):
             fullname = st.text_input("Full Name")
@@ -295,4 +257,4 @@ else:
                     pic_path = save_uploaded_image(pic_file, username)
                 save_profile(username, fullname, age, gender, blood_group, allergies, conditions, medications, pic_path)
                 st.success("Profile created successfully ✅")
-                st.rerun()  # standard rerun
+                st.rerun()
