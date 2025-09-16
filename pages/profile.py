@@ -1,4 +1,4 @@
-# pages/profile.py — Viveka Final Functional
+# pages/profile.py — Viveka Fixed
 import streamlit as st
 import sqlite3
 import os
@@ -14,7 +14,6 @@ DEFAULT_PIC = ASSETS_DIR / "default.png"
 def init_medical_db():
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
-    # Create table if not exists
     c.execute("""
         CREATE TABLE IF NOT EXISTS medical_profiles (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -25,14 +24,10 @@ def init_medical_db():
             medical_history TEXT,
             chronic_conditions TEXT,
             medications TEXT,
-            lifestyle TEXT
+            lifestyle TEXT,
+            profile_pic TEXT
         )
     """)
-    # Add profile_pic column if missing
-    try:
-        c.execute("ALTER TABLE medical_profiles ADD COLUMN profile_pic TEXT")
-    except sqlite3.OperationalError:
-        pass  # column already exists
     conn.commit()
     conn.close()
 
@@ -76,31 +71,11 @@ profile = get_profile(username)
 # ---- STYLES ----
 st.markdown("""
 <style>
-body { font-family: 'Segoe UI', sans-serif; }
 .profile-container { display: flex; justify-content: center; margin-top: 40px; }
-.profile-card { 
-    background: #fdfdfd; 
-    border-radius: 25px; 
-    box-shadow: 0px 10px 25px rgba(0,0,0,0.15); 
-    padding: 30px 25px; 
-    text-align: center; 
-    width: 320px; 
-    position: relative; 
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-.profile-card:hover { transform: translateY(-5px); box-shadow: 0px 15px 35px rgba(0,0,0,0.2);}
-.profile-pic { 
-    width: 160px; 
-    height: 160px; 
-    border-radius: 50%; 
-    object-fit: cover; 
-    border: 4px solid #4CAF50; 
-    box-shadow: 0 4px 15px rgba(0,0,0,0.2); 
-    margin-bottom: 15px;
-}
+.profile-card { background: #fdfdfd; border-radius: 25px; box-shadow: 0px 10px 25px rgba(0,0,0,0.15); padding: 30px 25px; text-align: center; width: 320px; }
+.profile-pic { width: 160px; height: 160px; border-radius: 50%; object-fit: cover; border: 4px solid #4CAF50; margin-bottom: 15px; }
 .profile-username { font-size: 22px; font-weight: bold; color: #222; margin-bottom: 15px; }
-.detail-card { background:#fff; border-radius:15px; padding:20px; box-shadow:0 4px 10px rgba(0,0,0,0.05); margin-bottom:10px; transition: transform 0.2s; }
-.detail-card:hover { transform: translateY(-3px); }
+.detail-card { background:#fff; border-radius:15px; padding:20px; box-shadow:0 4px 10px rgba(0,0,0,0.05); margin-bottom:10px; }
 .detail-card h4 { margin:0 0 10px 0; color:#222; font-size:16px; border-bottom:1px solid #eee; padding-bottom:5px;}
 .detail-card p { margin:0; color:#555; font-size:14px; line-height:1.4;}
 </style>
@@ -111,24 +86,26 @@ def generate_health_tips(profile):
     tips = []
     if not profile: return tips
     age, gender, allergies, history, chronic, meds, lifestyle = profile[2:9]
-    if age and age > 50: tips.append(("Age Alert", "Consider regular health checkups for heart and bone health.", "⚠️"))
-    if allergies: tips.append(("Allergy Alert", f"Watch out for triggers: {allergies}", "❗"))
-    if "smoke" in (lifestyle or "").lower(): tips.append(
-        ("Lifestyle Tip", "Consider quitting smoking to improve overall health.", "🚭"))
-    if "alcohol" in (lifestyle or "").lower(): tips.append(
-        ("Lifestyle Tip", "Limit alcohol consumption for better liver health.", "🍷"))
-    if chronic: tips.append(
-        ("Chronic Condition", f"Manage your condition: {chronic}. Consult your doctor regularly.", "💊"))
-    if not tips: tips.append(("General Tip", "Keep a balanced diet and exercise regularly.", "✅"))
+    if age and age > 50:
+        tips.append(("Age Alert", "Consider regular health checkups for heart and bone health.", "⚠️"))
+    if allergies:
+        tips.append(("Allergy Alert", f"Watch out for triggers: {allergies}", "❗"))
+    if "smoke" in (lifestyle or "").lower():
+        tips.append(("Lifestyle Tip", "Consider quitting smoking to improve overall health.", "🚭"))
+    if "alcohol" in (lifestyle or "").lower():
+        tips.append(("Lifestyle Tip", "Limit alcohol consumption for better liver health.", "🍷"))
+    if chronic:
+        tips.append(("Chronic Condition", f"Manage your condition: {chronic}. Consult your doctor regularly.", "💊"))
+    if not tips:
+        tips.append(("General Tip", "Keep a balanced diet and exercise regularly.", "✅"))
     return tips
 
 # ---- DISPLAY PROFILE ----
 st.title("Your Medical Profile")
 
 if profile:
+    # ---- Profile Card ----
     pic_path = profile[9] if profile[9] and os.path.exists(profile[9]) else str(DEFAULT_PIC)
-
-    # Profile card with Streamlit layout
     st.markdown(f"""
     <div class="profile-container">
         <div class="profile-card">
@@ -138,8 +115,13 @@ if profile:
     </div>
     """, unsafe_allow_html=True)
 
-    # Edit button outside HTML (Streamlit button)
+    # ---- Edit Option ----
     if st.button("✏️ Edit Profile"):
+        edit_mode = True
+    else:
+        edit_mode = False
+
+    if edit_mode:
         with st.form("edit_form"):
             col1, col2 = st.columns([1, 2])
             with col1:
@@ -165,9 +147,9 @@ if profile:
             if submitted:
                 save_profile(username, age, gender, allergies, history, chronic, meds, lifestyle, profile_pic_path)
                 st.success("✅ Profile saved successfully!")
+                st.rerun()
 
-# ---- DISPLAY HEALTH TIPS ----
-if profile:
+    # ---- Health Tips ----
     tips = generate_health_tips(profile)
     st.markdown("### 🩺 Health Recommendations / Tips")
     for title, text, icon in tips:
@@ -177,3 +159,32 @@ if profile:
                 <p>{text}</p>
             </div>
         """, unsafe_allow_html=True)
+
+else:
+    # ---- First Time User → Show Form Directly ----
+    st.info("ℹ️ No profile found. Please complete your medical profile.")
+    with st.form("new_profile_form"):
+        col1, col2 = st.columns([1, 2])
+        with col1:
+            uploaded_file = st.file_uploader("Upload Profile Picture", type=["jpg", "jpeg", "png"])
+            profile_pic_path = str(DEFAULT_PIC)
+            if uploaded_file:
+                save_path = ASSETS_DIR / f"{username}_profile.png"
+                with open(save_path, "wb") as f:
+                    f.write(uploaded_file.getbuffer())
+                profile_pic_path = str(save_path)
+            st.image(profile_pic_path, width=200, caption="Profile Picture")
+        with col2:
+            age = st.number_input("Age", min_value=0, max_value=120, value=25)
+            gender = st.selectbox("Gender", ["Male", "Female", "Other"], index=0)
+            allergies = st.text_area("Allergies")
+            history = st.text_area("Medical History")
+            chronic = st.text_area("Chronic Conditions")
+            meds = st.text_area("Current Medications")
+            lifestyle = st.text_area("Lifestyle Notes")
+
+        submitted = st.form_submit_button("💾 Save Profile")
+        if submitted:
+            save_profile(username, age, gender, allergies, history, chronic, meds, lifestyle, profile_pic_path)
+            st.success("✅ Profile created successfully!")
+            st.rerun()
