@@ -5,12 +5,12 @@ import streamlit.components.v1 as components
 from PIL import Image
 
 # -------------------------------
-# Streamlit Config (MUST be first Streamlit command)
+# Streamlit Config
 # -------------------------------
 st.set_page_config(
     page_title="VIVEKA",
     layout="wide",
-    initial_sidebar_state="collapsed"  # Collapse sidebar by default
+    initial_sidebar_state="collapsed"
 )
 
 # -------------------------------
@@ -39,7 +39,7 @@ st.markdown("""
 # -------------------------------
 # Load Logo Safely
 # -------------------------------
-logo_path = "assets/logo.png"  # Viveka logo
+logo_path = "assets/logo.png"
 logo = None
 if os.path.exists(logo_path):
     logo = Image.open(logo_path)
@@ -94,7 +94,7 @@ st.markdown("""
 if logo:
     col1, col2, col3 = st.columns([1, 1, 1])
     with col2:
-        st.image(logo, use_container_width=True)
+        st.image(logo, width="stretch")
 
 # -------------------------------
 # Intro Section
@@ -137,11 +137,11 @@ for i in range(0, len(features), 2):
 # -------------------------------
 # Get Started Button
 # -------------------------------
-if st.button("Get Started", use_container_width=True):
+if st.button("Get Started", width="stretch"):
     try:
-        st.switch_page("pages/login_signup.py")  # Streamlit >= 1.32
+        st.switch_page("pages/login_signup.py")  # Needs Streamlit >=1.32
     except Exception:
-        st.warning("⚠️ Page navigation not supported in this version. Please go to 'pages/login_signup.py' manually.")
+        st.page_link("pages/login_signup.py", label="👉 Go to Login / Signup")
 
 # -------------------------------
 # Footer
